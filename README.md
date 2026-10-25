@@ -2,9 +2,13 @@
 
 A SnowRunner reverse-engineering project focused on building a functional **Noclip / free-flight script** for vehicles.
 
-**Full script tested on Patch 18.0 (Season 8) — `1.148111.SNOW_DLC8`.**
+**Your game version:** `1.907887.SNOW_DLC_19`
 
-Yes, this is an old game version. It’s simply the version I had lying around on my PC.
+The updated pointers and basic Noclip movement (`Ctrl` + `W`) have been verified on this version. Hover, rotation, and trailer behavior have not yet been tested on it.
+
+The complete script was previously tested on Patch 18.0 (Season 8) — `1.148111.SNOW_DLC8`.
+
+The older version is the one originally used to develop and test the full feature set.
 
 ## Demo
 
@@ -82,7 +86,7 @@ Other versions of SnowRunner may have:
 
 So if it does not work on your game version, that does **not** automatically mean the whole mapping is useless — it may just need a few updated anchors.
 
-The pointer chain and visual position path have since been re-mapped in a live session on `1.907887.SNOW_DLC_19`. Basic movement with Ctrl+W has been confirmed on that build; hover, rotation, and trailer behavior have not yet been verified.
+The pointer chain and visual position path have since been re-mapped in a live session on `1.907887.SNOW_DLC_19`; basic movement with Ctrl+W is confirmed on that build.
 
 ## Updating for newer versions
 
