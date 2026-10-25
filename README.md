@@ -2,8 +2,7 @@
 
 A SnowRunner reverse-engineering project focused on building a functional **Noclip / free-flight script** for vehicles.
 
-**Tested game version:**\
-**Patch 18.0 (Season 8) — `1.148111.SNOW_DLC8`**
+**Full script tested on Patch 18.0 (Season 8) — `1.148111.SNOW_DLC8`.**
 
 Yes, this is an old game version. It’s simply the version I had lying around on my PC.
 
@@ -64,8 +63,7 @@ To keep the truck stable and visually synced, it updates:
 
 - Havok world/swept positions
 - motion reference slots
-- visual vehicle coordinates
-- addon/cabin visual base node
+- the currently mapped visual transform
 
 It also zeroes relevant velocities when needed, and applies angular velocity when rotating.
 
@@ -73,9 +71,7 @@ So this is not just "teleport one pointer and hope for the best" — it tries to
 
 ## Compatibility
 
-This project is built around offsets from:
-
-**Patch 18.0 (Season 8) — `1.148111.SNOW_DLC8`**
+The complete Noclip behavior was tested on **Patch 18.0 (Season 8) — `1.148111.SNOW_DLC8`**.
 
 Other versions of SnowRunner may have:
 
@@ -85,6 +81,8 @@ Other versions of SnowRunner may have:
 - partially matching structures
 
 So if it does not work on your game version, that does **not** automatically mean the whole mapping is useless — it may just need a few updated anchors.
+
+The pointer chain and visual position path have since been re-mapped in a live session on `1.907887.SNOW_DLC_19`. Basic movement with Ctrl+W has been confirmed on that build; hover, rotation, and trailer behavior have not yet been verified.
 
 ## Updating for newer versions
 
@@ -106,9 +104,9 @@ General idea:
    - `[TRUCK_CONTROL] + 0x8` still leads to the current active `vehicle object`\
      *(or find the new equivalent)*
 3. From that `vehicle object`, verify:
-   - `+ 0x5C8` → main `hkpRigidBody`
-   - `+ 0x58` → addon manager
-   - visual position fields
+   - the current main `hkpRigidBody` pointer
+   - the current addon model and visual transform pointers
+   - visual position fields by comparing them while the truck moves
 4. Check the Havok rigid body layout:
    - position blocks
    - rotation blocks

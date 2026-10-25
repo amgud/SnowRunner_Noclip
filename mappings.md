@@ -1,8 +1,24 @@
 # SnowRunner mappings
 
-These are my structure notes from reversing SnowRunner on:
+## Current live mapping
 
-**Patch 18.0 (Season 8) - `1.148111.SNOW_DLC8`**
+Re-mapped in a live `SnowRunner.exe` session running `1.907887.SNOW_DLC_19`. These addresses were confirmed for that process; the module-relative singleton location should be re-verified after game updates.
+
+- `"SnowRunner.exe" + 0x2A92E38` -> `TRUCK_CONTROL` singleton
+  - `+ 0x8` -> current vehicle object
+- `[Vehicle] + 0x5D0` -> `hkpRigidBody` (RTTI-confirmed)
+  - `+ 0x128` -> `hkpSimulationIsland` (RTTI-confirmed)
+  - `[Island] + 0x60` -> rigid-body pointer array
+  - `[Island] + 0x68` -> entity count (24 in the observed session; dynamic)
+- `[Vehicle] + 0x60` -> `TRUCK_ADDON_MODEL`
+  - `[AddonModel] + 0x68` -> visual transform object
+  - `[Transform] + 0x160, + 0x164, + 0x168` -> visual X, Y, Z
+
+After the truck was driven, the visual coordinates at `Transform + 0x160` matched the physics position at `hkpRigidBody + 0x1A0` (with a one-bit difference in one sampled Y value). The user also confirmed that the updated script moves the truck with Ctrl+W. Hover, rotation, and trailer behavior remain unverified on this build.
+
+## Legacy structure notes
+
+The remaining mappings below were originally recorded on **Patch 18.0 (Season 8) - `1.148111.SNOW_DLC8`**. They have not all been re-verified on `1.907887.SNOW_DLC_19`; use the current live mapping above for the Noclip pointer chain.
 
 ## 1. Global singletons & master arrays
 

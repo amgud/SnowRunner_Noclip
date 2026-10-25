@@ -15,26 +15,22 @@ if syntaxcheck then return end
 --[[==============================================================================
   SNOWRUNNER NOCLIP - MEMORY STRUCTURE &amp; POINTER MAP
   ==============================================================================
-  GAME VERSION: Patch 18.0 (Season 8) - 1.148111.SNOW_DLC8
+  POINTERS RE-MAPPED ON: 1.907887.SNOW_DLC_19
+  Basic movement (Ctrl+W) confirmed by user; other controls are untested.
 
   BASE POINTER:
-  "SnowRunner.exe"+2E5DA18       -&gt; TRUCK_CONTROL Singleton
-  ["SnowRunner.exe"+2E5DA18] + 8 -&gt; Current active Vehicle Object
+  "SnowRunner.exe"+2A92E38       -&gt; TRUCK_CONTROL Singleton
+  ["SnowRunner.exe"+2A92E38] + 8 -&gt; Current active Vehicle Object
 
-  VISUAL MODEL COORDINATES (Updates the camera/visual model):
-  [VehObj + 0x8EC] -&gt; Visual X (Float)
-  [VehObj + 0x8F0] -&gt; Visual Y (Float) [Altitude]
-  [VehObj + 0x8F4] -&gt; Visual Z (Float)
-
-  ADDON MANAGER VISUAL BASE (Better practical sync target for cabin/chassis visuals):
-  [VehObj + 0x58]    -&gt; TRUCK_ADDON_MODEL Pointer
-  [AddonMgr + 0x498] -&gt; Visual Cabin/Chassis Base Pointer
-  [BasePtr + 0x80]   -&gt; Visual Position X
-  [BasePtr + 0x84]   -&gt; Visual Position Y
-  [BasePtr + 0x88]   -&gt; Visual Position Z
+  VISUAL MODEL TRANSFORM (position matched the moving physics body):
+  [VehObj + 0x60]      -&gt; TRUCK_ADDON_MODEL Pointer
+  [AddonModel + 0x68]  -&gt; Visual transform object
+  [Transform + 0x160]  -&gt; Visual X (Float)
+  [Transform + 0x164]  -&gt; Visual Y (Float)
+  [Transform + 0x168]  -&gt; Visual Z (Float)
 
   HAVOK PHYSICS ENGINE (hkpRigidBody &amp; hkpSimulationIsland):
-  [VehObj + 0x5C8]  -&gt; Main Cabin/Chassis Physics Object (hkpRigidBody)
+  [VehObj + 0x5D0]  -&gt; Main Cabin/Chassis Physics Object (hkpRigidBody)
   [CabinRb + 0x128] -&gt; Physics Simulation Island (hkpSimulationIsland)
                           (The island contains all rigid bodies connected to the truck)
   [Island + 0x60]   -&gt; Array of connected rigid body pointers
@@ -117,7 +113,7 @@ rbCache = {}
 rbCacheCount = 0
 
 -- Cache the static address once instead of resolving the symbol every tick
-truckCtlStatic = getAddressSafe('SnowRunner.exe+2E5DA18')
+truckCtlStatic = getAddressSafe('SnowRunner.exe+2A92E38')
 lastTick = getTickCount()
 
 local MOVE_EPS = 0.0001
@@ -135,34 +131,14 @@ local function moveXYZBlock(rb, offset, moveX, deltaY, moveZ)
   end
 end
 
-local function moveVisualXYZ(vehObj, moveX, deltaY, moveZ)
-  local vx = readFloat(vehObj + 0x8EC)
-  local vy = readFloat(vehObj + 0x8F0)
-  local vz = readFloat(vehObj + 0x8F4)
+local function moveVisualPosition(vehObj, moveX, deltaY, moveZ)
+  local addonModel = readPointer(vehObj + 0x60)
+  if addonModel == nil or addonModel == 0 then return end
 
-  if vx ~= nil and vy ~= nil and vz ~= nil then
-    writeFloat(vehObj + 0x8EC, vx + moveX)
-    writeFloat(vehObj + 0x8F0, vy + deltaY)
-    writeFloat(vehObj + 0x8F4, vz + moveZ)
-  end
-end
+  local visualTransform = readPointer(addonModel + 0x68)
+  if visualTransform == nil or visualTransform == 0 then return end
 
-local function moveVisualBaseNode(vehObj, moveX, deltaY, moveZ)
-  local addonMgr = readPointer(vehObj + 0x58)
-  if addonMgr == nil or addonMgr == 0 then return end
-
-  local baseNode = readPointer(addonMgr + 0x498)
-  if baseNode == nil or baseNode == 0 then return end
-
-  local x = readFloat(baseNode + 0x80)
-  local y = readFloat(baseNode + 0x84)
-  local z = readFloat(baseNode + 0x88)
-
-  if x ~= nil and y ~= nil and z ~= nil then
-    writeFloat(baseNode + 0x80, x + moveX)
-    writeFloat(baseNode + 0x84, y + deltaY)
-    writeFloat(baseNode + 0x88, z + moveZ)
-  end
+  moveXYZBlock(visualTransform, 0x160, moveX, deltaY, moveZ)
 end
 
 local function rebuildRigidBodyCache(entityArray, numEntities)
@@ -280,7 +256,7 @@ NCTimer.OnTimer = function(t)
   end
 
   if truckCtlStatic == nil then
-    truckCtlStatic = getAddressSafe('SnowRunner.exe+2E5DA18')
+    truckCtlStatic = getAddressSafe('SnowRunner.exe+2A92E38')
     if truckCtlStatic == nil then return end
   end
 
@@ -288,7 +264,7 @@ NCTimer.OnTimer = function(t)
   if base == nil or base == 0 then return end
   local vehObj = readPointer(base + 0x8)
   if vehObj == nil or vehObj == 0 then return end
-  local cabinRb = readPointer(vehObj + 0x5C8)
+  local cabinRb = readPointer(vehObj + 0x5D0)
   if cabinRb == nil or cabinRb == 0 then return end
   local island = readPointer(cabinRb + 0x128)
   if island == nil or island == 0 then return end
@@ -436,8 +412,7 @@ NCTimer.OnTimer = function(t)
   -- CAMERA SYNC
   -- ==========================================
   if doMove then
-    moveVisualXYZ(vehObj, moveX, deltaY, moveZ)
-    moveVisualBaseNode(vehObj, moveX, deltaY, moveZ)
+    moveVisualPosition(vehObj, moveX, deltaY, moveZ)
   end
 end
 {$asm}
